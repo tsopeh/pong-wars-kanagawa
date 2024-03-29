@@ -4,20 +4,21 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport"
-    content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+        content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
   <title>Kanagawa</title>
+  <link href="https://fonts.googleapis.com/css2?family=Honk&family=Ubuntu+Mono&display=swap" rel="stylesheet">
   <style>
     * {
       margin: 0;
       padding: 0;
       min-width: 0;
       box-sizing: border-box;
+      line-height: 1;
     }
 
     html,
     body {
       height: 100vh;
-      font-family: serif, sans-serif, monospace;
     }
 
     body {
@@ -25,7 +26,7 @@
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      gap: 50px;
+      gap: 4vmin;
       text-align: center;
       color: #1e4769;
       background-color: #f9c098;
@@ -33,7 +34,8 @@
     }
 
     h1 {
-      font-size: min(5vmax, 42px);
+      font-size: 12vmin;
+      font-family: "Honk", serif, sans-serif, monospace;
     }
 
     canvas {
@@ -44,8 +46,8 @@
     }
 
     footer {
-      font-size: 12px;
-      font-weight: 900;
+      font-size: 2vmin;
+      font-family: "Ubuntu Mono", monospace;
     }
 
     a {
@@ -55,119 +57,120 @@
 </head>
 
 <body>
-  <h1>Kanagawa</h1>
-  <canvas id="canvas" width="800" height="600"></canvas>
-  <footer>
-    <div>Made by Tsopeh — GitHub</div>
-    <br>
-    <div>
-      <a href="https://twitter.com/vnglst/status/1751278052154179770">Inspiration</a>
-      | <a href="https://en.wikipedia.org/wiki/The_Great_Wave_off_Kanagawa">Theme</a>
-      | <a href="https://www.color-hex.com/color-palette/39047">Palette</a>
+<h1>Kanagawa</h1>
+<canvas id="canvas" width="800" height="600"></canvas>
+<footer>
+  <div>Made by Tsopeh — GitHub | Twitter</div>
+  <br>
+  <div>
+    <a href="https://twitter.com/vnglst/status/1751278052154179770">Inspiration</a>
+    | <a href="https://en.wikipedia.org/wiki/The_Great_Wave_off_Kanagawa">Theme</a>
+    | <a href="https://www.color-hex.com/color-palette/39047">Palette</a>
 
-    </div>
-  </footer>
-  <script>
-    // @ts-check
-    const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById("canvas"))
-    if (!canvas) throw new Error("Missing canvas element")
-    const ctx = /** @type {CanvasRenderingContext2D} */ (canvas.getContext("2d"))
-    if (!ctx) throw new Error("Failed to create the 2D context")
+  </div>
+</footer>
+<script>
+  // @ts-check
+  const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('canvas'))
+  if (!canvas) throw new Error('Missing canvas element')
+  const ctx = /** @type {CanvasRenderingContext2D} */ (canvas.getContext('2d'))
+  if (!ctx) throw new Error('Failed to create the 2D context')
 
-    const squareSize = 25
-    const squareXCount = canvas.width / squareSize
-    const squareYCount = canvas.height / squareSize
+  const squareSize = 25
+  const squareXCount = canvas.width / squareSize
+  const squareYCount = canvas.height / squareSize
 
-    let player_1 = {
-      x: canvas.width * 1 / 4,
-      y: canvas.height / 2,
-      dx: 8,
-      dy: -8,
-      colors: ["#edd5ad", "#f0e0bb", "#f2e8d0"]
+  let player_1 = {
+    x: canvas.width * 1 / 4,
+    y: canvas.height / 2,
+    dx: 8,
+    dy: -8,
+    colors: ['#edd5ad', '#f0e0bb', '#f2e8d0'],
+  }
+
+  let player_2 = {
+    x: canvas.width * 3 / 4,
+    y: canvas.height / 2,
+    dx: -8,
+    dy: 8,
+    colors: ['#19869c', '#3d5066'],
+  }
+
+  /** @type {Array<Array<string>>} */
+  let board = []
+
+  for (let i = 0; i < squareXCount; i++) {
+    board[i] = []
+    for (let j = 0; j < squareYCount; j++) {
+      const colors = i >= (squareXCount / 2) ? player_1.colors : player_2.colors
+      board[i][j] = randomArrayItem(colors)
     }
+  }
 
-    let player_2 = {
-      x: canvas.width * 3 / 4,
-      y: canvas.height / 2,
-      dx: -8,
-      dy: 8,
-      colors: ["#19869c", "#3d5066"]
-    }
-
-    /** @type {Array<Array<string>>} */
-    let board = []
-
-    for (let i = 0; i < squareXCount; i++) {
-      board[i] = []
-      for (let j = 0; j < squareYCount; j++) {
-        const colors = i >= (squareXCount / 2) ? player_1.colors : player_2.colors
-        board[i][j] = randomArrayItem(colors)
-      }
-    }
-
-    function draw() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height)
-      drawSquares()
-      drawPlayers()
-      recalculateState()
-      requestAnimationFrame(draw)
-    }
+  function draw () {
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
+    drawSquares()
+    drawPlayers()
+    recalculateState()
     requestAnimationFrame(draw)
+  }
 
-    /**
-     * @param min {number}
-     * @param max {number}
-     * @returns {number}
-     */
-    function random(min, max) {
-      return Math.random() * (max - min) + min
-    }
+  requestAnimationFrame(draw)
 
-    /**
-     * @template T
-     * @param arr {Array<T>}
-     * @returns {T}
-     */
-    function randomArrayItem(arr) {
-      const randomIndex = Math.round(random(0, arr.length - 1))
-      return arr[randomIndex]
-    }
+  /**
+   * @param min {number}
+   * @param max {number}
+   * @returns {number}
+   */
+  function random (min, max) {
+    return Math.random() * (max - min) + min
+  }
 
-    function drawSquares() {
-      for (let i = 0; i < squareXCount; i++) {
-        for (let j = 0; j < squareYCount; j++) {
-          ctx.fillStyle = board[i][j]
-          ctx.fillRect(i * squareSize, j * squareSize, squareSize, squareSize)
-        }
+  /**
+   * @template T
+   * @param arr {Array<T>}
+   * @returns {T}
+   */
+  function randomArrayItem (arr) {
+    const randomIndex = Math.round(random(0, arr.length - 1))
+    return arr[randomIndex]
+  }
+
+  function drawSquares () {
+    for (let i = 0; i < squareXCount; i++) {
+      for (let j = 0; j < squareYCount; j++) {
+        ctx.fillStyle = board[i][j]
+        ctx.fillRect(i * squareSize, j * squareSize, squareSize, squareSize)
       }
     }
+  }
 
-    function drawPlayers() {
-      ctx.beginPath()
-      ctx.arc(player_1.x, player_1.y, squareSize, 0, 2 * Math.PI, false)
-      ctx.fillStyle = player_1.color
-      ctx.fill()
-      ctx.closePath()
+  function drawPlayers () {
+    ctx.beginPath()
+    ctx.arc(player_1.x, player_1.y, squareSize, 0, 2 * Math.PI, false)
+    ctx.fillStyle = player_1.color
+    ctx.fill()
+    ctx.closePath()
 
-      ctx.beginPath()
-      ctx.arc(player_2.x, player_2.y, squareSize, 0, 2 * Math.PI, false)
-      ctx.fillStyle = player_2.color
-      ctx.fill()
-      ctx.closePath()
-    }
+    ctx.beginPath()
+    ctx.arc(player_2.x, player_2.y, squareSize, 0, 2 * Math.PI, false)
+    ctx.fillStyle = player_2.color
+    ctx.fill()
+    ctx.closePath()
+  }
 
-    function recalculateState() {
-      player_1.x += player_1.dx
-      player_1.y += player_1.dy
+  function recalculateState () {
+    player_1.x += player_1.dx
+    player_1.y += player_1.dy
 
-      player_2.x += player_2.dx
-      player_2.y += player_2.dy
-    }
+    player_2.x += player_2.dx
+    player_2.y += player_2.dy
+  }
 
-    // TODO: Use google font; Finish the game and after that implement
-    //  color changing. Maybe different strategy for wave and the land;
-    //  use different starting angle, to resemble the original piece.
-  </script>
+  // TODO: Use google font; Finish the game and after that implement
+  //  color changing. Maybe different strategy for wave and the land;
+  //  use different starting angle, to resemble the original piece.
+</script>
 </body>
 
 </html>
