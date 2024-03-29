@@ -80,6 +80,26 @@
     </footer>
     <script>
       // @ts-check
+
+      /**
+       * @typedef {{
+       *  x: number
+       *  y: number
+       *  dx: number
+       *  dy: number
+       *  color: string
+       *  tileColors: Array<string>
+       * }} Player
+       *
+       * @typedef {Array<Array<string>>} Board
+       *
+       * @typedef {{
+       *  player1: Player
+       *  player2: Player
+       *  board: Board
+       * }} State
+       */
+
       const canvas = /** @type {HTMLCanvasElement} */ (
         document.getElementById("canvas")
       );
@@ -92,69 +112,38 @@
       const squareSize = 25;
       const squareXCount = canvas.width / squareSize;
       const squareYCount = canvas.height / squareSize;
+      const initialPlayerSpeed = 8;
 
-      const playerSpeed = 8;
+      const state = getInitialState();
 
-      const player_1 = {
-        x: (canvas.width * 1) / 4,
-        y: canvas.height / 2,
-        dx: playerSpeed,
-        dy: -1 * playerSpeed,
-        colors: ["#edd5ad", "#f0e0bb", "#f2e8d0"],
-      };
-
-      /** @type {typeof player_1} */
-      const player_2 = {
-        x: (canvas.width * 3) / 4,
-        y: canvas.height / 2,
-        dx: -1 * playerSpeed,
-        dy: playerSpeed,
-        colors: ["#19869c", "#3d5066"],
-      };
-
-      /** @type {Array<Array<string>>} */
-      let board = [];
-
-      for (let i = 0; i < squareXCount; i++) {
-        board[i] = [];
-        for (let j = 0; j < squareYCount; j++) {
-          const colors =
-            i >= squareXCount / 2 ? player_1.colors : player_2.colors;
-          board[i][j] = randomArrayItem(colors);
-        }
-      }
-
-      function draw() {
+      /** @type {FrameRequestCallback} */
+      function draw(t) {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        drawSquares();
-        drawPlayer(player_1);
-        drawPlayer(player_2);
-        recalculateState();
+        drawBoard(state.board);
+        drawPlayer(state.player1);
+        drawPlayer(state.player2);
+        const delayBeforeStartMs = 1000;
+        if (t > delayBeforeStartMs) {
+          recalculateState(state);
+        }
         requestAnimationFrame(draw);
       }
 
       requestAnimationFrame(draw);
 
-      /**
-       * @param min {number}
-       * @param max {number}
-       * @returns {number}
-       */
+      /** @param min {number} @param max {number} @returns {number} */
       function random(min, max) {
         return Math.random() * (max - min) + min;
       }
 
-      /**
-       * @template T
-       * @param arr {Array<T>}
-       * @returns {T}
-       */
+      /** @template T @param arr {Array<T>}, @returns {T} */
       function randomArrayItem(arr) {
         const randomIndex = Math.round(random(0, arr.length - 1));
         return arr[randomIndex];
       }
 
-      function drawSquares() {
+      /** @param board {Board} */
+      function drawBoard(board) {
         for (let i = 0; i < squareXCount; i++) {
           for (let j = 0; j < squareYCount; j++) {
             ctx.fillStyle = board[i][j];
@@ -168,7 +157,7 @@
         }
       }
 
-      /** @param player {typeof player_1} */
+      /** @param player {Player} */
       function drawPlayer(player) {
         ctx.beginPath();
         ctx.arc(player.x, player.y, squareSize, 0, 2 * Math.PI, false);
@@ -177,17 +166,61 @@
         ctx.closePath();
       }
 
-      function recalculateState() {
-        player_1.x += player_1.dx;
-        player_1.y += player_1.dy;
+      /** @param state {State} */
+      function recalculateState(state) {
+        const { player1, player2, board } = state;
 
-        player_2.x += player_2.dx;
-        player_2.y += player_2.dy;
+        player1.x += player1.dx;
+        player1.y += player1.dy;
+
+        player2.x += player2.dx;
+        player2.y += player2.dy;
+
+        // TODO: Implement collision detection
       }
 
-      // TODO: Use google font; Finish the game and after that implement
-      //  color changing. Maybe different strategy for wave and the land;
-      //  use different starting angle, to resemble the original piece.
+      /** @returns {State} */
+      function getInitialState() {
+        const player1Colors = ["#edd5ad", "#f0e0bb", "#f2e8d0"];
+        const player2Colors = ["#19869c", "#3d5066"];
+
+        /** @type {Player} */
+        const player1 = {
+          x: canvas.width * (1 / 4),
+          y: canvas.height / 2,
+          dx: initialPlayerSpeed,
+          dy: -1 * initialPlayerSpeed,
+          color: randomArrayItem(player1Colors),
+          tileColors: player2Colors,
+        };
+
+        /** @type {Player} */
+        const player2 = {
+          x: canvas.width * (3 / 4),
+          y: canvas.height / 2,
+          dx: -1 * initialPlayerSpeed,
+          dy: initialPlayerSpeed,
+          color: randomArrayItem(player2Colors),
+          tileColors: player1Colors,
+        };
+
+        /** @type {Board} */
+        let board = [];
+        for (let i = 0; i < squareXCount; i++) {
+          board[i] = [];
+          for (let j = 0; j < squareYCount; j++) {
+            const colors =
+              i < squareXCount / 2 ? player1.tileColors : player2.tileColors;
+            board[i][j] = randomArrayItem(colors);
+          }
+        }
+
+        return { player1, player2, board };
+      }
+
+      // TODO: Finish the game and after that implement color changing.
+      // Maybe different strategy for wave and the land;
+      // Use different starting angle, to resemble the original piece.
     </script>
   </body>
 </html>
