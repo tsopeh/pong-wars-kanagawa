@@ -1,176 +1,193 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport"
-        content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
-  <title>Kanagawa</title>
-  <link href="https://fonts.googleapis.com/css2?family=Honk&family=Ubuntu+Mono&display=swap" rel="stylesheet">
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      min-width: 0;
-      box-sizing: border-box;
-      line-height: 1;
-    }
-
-    html,
-    body {
-      height: 100vh;
-    }
-
-    body {
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      gap: 4vmin;
-      text-align: center;
-      color: #1e4769;
-      background-color: #f9c098;
-      padding: 0 5vw;
-    }
-
-    h1 {
-      font-size: 12vmin;
-      font-family: "Honk", serif, sans-serif, monospace;
-    }
-
-    canvas {
-      width: min(800px, 90vw);
-      aspect-ratio: 4/3;
-      border-radius: 8px;
-      box-shadow: 0 0 16px rgba(222, 121, 5, 0.4);
-    }
-
-    footer {
-      font-size: 2vmin;
-      font-family: "Ubuntu Mono", monospace;
-    }
-
-    a {
-      color: inherit;
-    }
-  </style>
-</head>
-
-<body>
-<h1>Kanagawa</h1>
-<canvas id="canvas" width="800" height="600"></canvas>
-<footer>
-  <div>Made by Tsopeh — GitHub | Twitter</div>
-  <br>
-  <div>
-    <a href="https://twitter.com/vnglst/status/1751278052154179770">Inspiration</a>
-    | <a href="https://en.wikipedia.org/wiki/The_Great_Wave_off_Kanagawa">Theme</a>
-    | <a href="https://www.color-hex.com/color-palette/39047">Palette</a>
-
-  </div>
-</footer>
-<script>
-  // @ts-check
-  const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('canvas'))
-  if (!canvas) throw new Error('Missing canvas element')
-  const ctx = /** @type {CanvasRenderingContext2D} */ (canvas.getContext('2d'))
-  if (!ctx) throw new Error('Failed to create the 2D context')
-
-  const squareSize = 25
-  const squareXCount = canvas.width / squareSize
-  const squareYCount = canvas.height / squareSize
-
-  let player_1 = {
-    x: canvas.width * 1 / 4,
-    y: canvas.height / 2,
-    dx: 8,
-    dy: -8,
-    colors: ['#edd5ad', '#f0e0bb', '#f2e8d0'],
-  }
-
-  let player_2 = {
-    x: canvas.width * 3 / 4,
-    y: canvas.height / 2,
-    dx: -8,
-    dy: 8,
-    colors: ['#19869c', '#3d5066'],
-  }
-
-  /** @type {Array<Array<string>>} */
-  let board = []
-
-  for (let i = 0; i < squareXCount; i++) {
-    board[i] = []
-    for (let j = 0; j < squareYCount; j++) {
-      const colors = i >= (squareXCount / 2) ? player_1.colors : player_2.colors
-      board[i][j] = randomArrayItem(colors)
-    }
-  }
-
-  function draw () {
-    ctx.clearRect(0, 0, canvas.width, canvas.height)
-    drawSquares()
-    drawPlayers()
-    recalculateState()
-    requestAnimationFrame(draw)
-  }
-
-  requestAnimationFrame(draw)
-
-  /**
-   * @param min {number}
-   * @param max {number}
-   * @returns {number}
-   */
-  function random (min, max) {
-    return Math.random() * (max - min) + min
-  }
-
-  /**
-   * @template T
-   * @param arr {Array<T>}
-   * @returns {T}
-   */
-  function randomArrayItem (arr) {
-    const randomIndex = Math.round(random(0, arr.length - 1))
-    return arr[randomIndex]
-  }
-
-  function drawSquares () {
-    for (let i = 0; i < squareXCount; i++) {
-      for (let j = 0; j < squareYCount; j++) {
-        ctx.fillStyle = board[i][j]
-        ctx.fillRect(i * squareSize, j * squareSize, squareSize, squareSize)
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0"
+    />
+    <title>Kanagawa</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Honk&family=Ubuntu+Mono:wght@700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        min-width: 0;
+        box-sizing: border-box;
+        line-height: 1;
       }
-    }
-  }
 
-  function drawPlayers () {
-    ctx.beginPath()
-    ctx.arc(player_1.x, player_1.y, squareSize, 0, 2 * Math.PI, false)
-    ctx.fillStyle = player_1.color
-    ctx.fill()
-    ctx.closePath()
+      html,
+      body {
+        height: 100vh;
+      }
 
-    ctx.beginPath()
-    ctx.arc(player_2.x, player_2.y, squareSize, 0, 2 * Math.PI, false)
-    ctx.fillStyle = player_2.color
-    ctx.fill()
-    ctx.closePath()
-  }
+      body {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 4vmin;
+        text-align: center;
+        color: #1e4769;
+        background-color: #f9c098;
+        padding: 0 5vw;
+      }
 
-  function recalculateState () {
-    player_1.x += player_1.dx
-    player_1.y += player_1.dy
+      h1 {
+        font-family: "Honk", serif, sans-serif, monospace;
+        font-size: 12vmin;
+      }
 
-    player_2.x += player_2.dx
-    player_2.y += player_2.dy
-  }
+      canvas {
+        width: min(800px, 90vw);
+        aspect-ratio: 4/3;
+        border-radius: 8px;
+        box-shadow: 0 0 16px rgba(222, 121, 5, 0.4);
+      }
 
-  // TODO: Use google font; Finish the game and after that implement
-  //  color changing. Maybe different strategy for wave and the land;
-  //  use different starting angle, to resemble the original piece.
-</script>
-</body>
+      footer {
+        font-family: "Ubuntu Mono", monospace;
+        font-size: 2vmin;
+        font-weight: 700;
+      }
 
+      a {
+        color: inherit;
+      }
+    </style>
+  </head>
+
+  <body>
+    <h1>Kanagawa</h1>
+    <canvas id="canvas" width="800" height="600"></canvas>
+    <footer>
+      <div>Made by Tsopeh — GitHub | Twitter</div>
+      <br />
+      <div>
+        <a href="https://twitter.com/vnglst/status/1751278052154179770"
+          >Inspiration</a
+        >
+        |
+        <a href="https://en.wikipedia.org/wiki/The_Great_Wave_off_Kanagawa"
+          >Theme</a
+        >
+        | <a href="https://www.color-hex.com/color-palette/39047">Palette</a>
+      </div>
+    </footer>
+    <script>
+      // @ts-check
+      const canvas = /** @type {HTMLCanvasElement} */ (
+        document.getElementById("canvas")
+      );
+      if (!canvas) throw new Error("Missing canvas element");
+      const ctx = /** @type {CanvasRenderingContext2D} */ (
+        canvas.getContext("2d")
+      );
+      if (!ctx) throw new Error("Failed to create the 2D context");
+
+      const squareSize = 25;
+      const squareXCount = canvas.width / squareSize;
+      const squareYCount = canvas.height / squareSize;
+
+      const playerSpeed = 8;
+
+      const player_1 = {
+        x: (canvas.width * 1) / 4,
+        y: canvas.height / 2,
+        dx: playerSpeed,
+        dy: -1 * playerSpeed,
+        colors: ["#edd5ad", "#f0e0bb", "#f2e8d0"],
+      };
+
+      /** @type {typeof player_1} */
+      const player_2 = {
+        x: (canvas.width * 3) / 4,
+        y: canvas.height / 2,
+        dx: -1 * playerSpeed,
+        dy: playerSpeed,
+        colors: ["#19869c", "#3d5066"],
+      };
+
+      /** @type {Array<Array<string>>} */
+      let board = [];
+
+      for (let i = 0; i < squareXCount; i++) {
+        board[i] = [];
+        for (let j = 0; j < squareYCount; j++) {
+          const colors =
+            i >= squareXCount / 2 ? player_1.colors : player_2.colors;
+          board[i][j] = randomArrayItem(colors);
+        }
+      }
+
+      function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        drawSquares();
+        drawPlayer(player_1);
+        drawPlayer(player_2);
+        recalculateState();
+        requestAnimationFrame(draw);
+      }
+
+      requestAnimationFrame(draw);
+
+      /**
+       * @param min {number}
+       * @param max {number}
+       * @returns {number}
+       */
+      function random(min, max) {
+        return Math.random() * (max - min) + min;
+      }
+
+      /**
+       * @template T
+       * @param arr {Array<T>}
+       * @returns {T}
+       */
+      function randomArrayItem(arr) {
+        const randomIndex = Math.round(random(0, arr.length - 1));
+        return arr[randomIndex];
+      }
+
+      function drawSquares() {
+        for (let i = 0; i < squareXCount; i++) {
+          for (let j = 0; j < squareYCount; j++) {
+            ctx.fillStyle = board[i][j];
+            ctx.fillRect(
+              i * squareSize,
+              j * squareSize,
+              squareSize,
+              squareSize
+            );
+          }
+        }
+      }
+
+      /** @param player {typeof player_1} */
+      function drawPlayer(player) {
+        ctx.beginPath();
+        ctx.arc(player.x, player.y, squareSize, 0, 2 * Math.PI, false);
+        ctx.fillStyle = player.color;
+        ctx.fill();
+        ctx.closePath();
+      }
+
+      function recalculateState() {
+        player_1.x += player_1.dx;
+        player_1.y += player_1.dy;
+
+        player_2.x += player_2.dx;
+        player_2.y += player_2.dy;
+      }
+
+      // TODO: Use google font; Finish the game and after that implement
+      //  color changing. Maybe different strategy for wave and the land;
+      //  use different starting angle, to resemble the original piece.
+    </script>
+  </body>
 </html>
