@@ -81,6 +81,10 @@
     <script>
       // @ts-check
 
+      // TODO: Finish the game and after that implement color changing.
+      // Maybe different strategy for wave and the land;
+      // Use different starting angle, to resemble the original piece.
+
       /**
        * @typedef {{
        *  x: number
@@ -109,7 +113,7 @@
       );
       if (!ctx) throw new Error("Failed to create the 2D context");
 
-      const squareSize = 25;
+      const squareSize = 40;
       const squareXCount = canvas.width / squareSize;
       const squareYCount = canvas.height / squareSize;
       const initialPlayerSpeed = 8;
@@ -122,16 +126,21 @@
         drawBoard(state.board);
         drawPlayer(state.player1);
         drawPlayer(state.player2);
-        const delayBeforeStartMs = 1000;
+
+        const delayBeforeStartMs = 200;
         if (t > delayBeforeStartMs) {
           recalculateState(state);
         }
+
         requestAnimationFrame(draw);
       }
 
       requestAnimationFrame(draw);
 
-      /** @param min {number} @param max {number} @returns {number} */
+      /** @param min {number}
+       *  @param max {number}
+       *  @returns {number}
+       */
       function random(min, max) {
         return Math.random() * (max - min) + min;
       }
@@ -166,17 +175,93 @@
         ctx.closePath();
       }
 
-      /** @param state {State} */
+      /**
+       * @param state {State}
+       */
       function recalculateState(state) {
         const { player1, player2, board } = state;
 
-        player1.x += player1.dx;
-        player1.y += player1.dy;
+        const p1HitAngles = updateBoardForPlayer(board, player1);
+        const p2HitAngles = updateBoardForPlayer(board, player2);
 
-        player2.x += player2.dx;
-        player2.y += player2.dy;
+        updatePlayerDirectionAndVelocity(player1, p1HitAngles);
+        updatePlayerDirectionAndVelocity(player2, p2HitAngles);
 
-        // TODO: Implement collision detection
+        updatePlayerPosition(player1);
+        updatePlayerPosition(player2);
+      }
+
+      /** @param player {Player} */
+      function updatePlayerPosition(player) {
+        player.x += player.dx;
+        player.y += player.dy;
+      }
+
+      /**
+       * @param board {Board}
+       * @param player {Player}
+       * @returns {Array<number>}
+       */
+      function updateBoardForPlayer(board, player) {
+        /** @type {Array<number>} */
+        const hitAngles = [];
+        for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 4) {
+          const checkX = player.x + Math.cos(angle) * squareSize / 2;
+          const checkY = player.y + Math.sin(angle) * squareSize / 2;
+
+          const i = Math.floor(checkX / squareSize);
+          const j = Math.floor(checkY / squareSize);
+
+          const isInBounds =
+            i >= 0 && i < squareXCount && j >= 0 && j < squareYCount;
+          if (isInBounds) {
+            const isHit = !player.tileColors.includes(board[i][j]);
+            if (isHit) {
+              board[i][j] = randomArrayItem(player.tileColors);
+              hitAngles.push(angle);
+            } else {
+              // noop
+            }
+          } else {
+            hitAngles.push(angle);
+          }
+        }
+        return hitAngles;
+      }
+
+      /**
+       * @param player {Player}
+       * @param hitAngles {Array<number>}
+       */
+      function updatePlayerDirectionAndVelocity(player, hitAngles) {
+        if (hitAngles.length === 0) {
+          return;
+        }
+        const { xDir, yDir } = hitAngles.reduce(
+          (acc, hitAngle) => {
+            const shouldConsiderX =
+              Math.abs(Math.cos(hitAngle)) >= Math.abs(Math.sin(hitAngle));
+            if (shouldConsiderX) {
+              const hitDirX = Math.sign(Math.cos(hitAngle));
+              const travelDirX = Math.sign(player.dx);
+              if (hitDirX === travelDirX) {
+                acc.xDir = -1;
+              }
+            } else {
+              const hitDirY = Math.sign(Math.sin(hitAngle));
+              const travelDirY = Math.sign(player.dy);
+              if (hitDirY === travelDirY) {
+                acc.yDir = -1;
+              }
+            }
+            return acc;
+          },
+          { xDir: 1, yDir: 1 }
+        );
+        const newVelocityX = Math.floor(random(8, 10));
+        const newVelocityY = Math.floor(random(8, 10));
+        player.dx = xDir * Math.sign(player.dx) * newVelocityX;
+        player.dy = yDir * Math.sign(player.dy) * newVelocityY;
       }
 
       /** @returns {State} */
@@ -217,10 +302,6 @@
 
         return { player1, player2, board };
       }
-
-      // TODO: Finish the game and after that implement color changing.
-      // Maybe different strategy for wave and the land;
-      // Use different starting angle, to resemble the original piece.
     </script>
   </body>
 </html>
