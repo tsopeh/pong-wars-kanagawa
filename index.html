@@ -109,7 +109,7 @@
       );
       if (!ctx) throw new Error("Failed to create the 2D context");
 
-      const squareSize = 40;
+      const squareSize = 25;
       const squareXCount = canvas.width / squareSize;
       const squareYCount = canvas.height / squareSize;
 
@@ -117,7 +117,7 @@
 
       /** @type {FrameRequestCallback} */
       function draw(t) {
-        const delayBeforeStartMs = 200;
+        const delayBeforeStartMs = 1200;
         if (t > delayBeforeStartMs) {
           recalculateState(state);
         }
@@ -267,21 +267,24 @@
        * @returns {number}
        */
       function getRandomVelocity(tileSize) {
-        return random(tileSize / 5, tileSize / 3);
+        return random(tileSize / 4, tileSize / 2);
       }
 
       /** @returns {State} */
       function getInitialState() {
-        const initialPlayerSpeed = squareSize / 3;
         const player1Colors = ["#edd5ad", "#f0e0bb", "#f2e8d0"];
         const player2Colors = ["#19869c", "#3d5066"];
+
+        function getRandomInitialDirection() {
+          return (Math.random() > 0.5 ? 1 : -1) * getRandomVelocity(squareSize)
+        }
 
         /** @type {Player} */
         const player1 = {
           x: canvas.width * (1 / 4),
           y: canvas.height / 2,
-          dx: initialPlayerSpeed,
-          dy: -1 * initialPlayerSpeed,
+          dx: getRandomInitialDirection(),
+          dy: getRandomInitialDirection(),
           color: randomArrayItem(player1Colors),
           tileColors: player2Colors,
         };
@@ -290,11 +293,13 @@
         const player2 = {
           x: canvas.width * (3 / 4),
           y: canvas.height / 2,
-          dx: -1 * initialPlayerSpeed,
-          dy: initialPlayerSpeed,
+          dx: getRandomInitialDirection(),
+          dy: getRandomInitialDirection(),
           color: randomArrayItem(player2Colors),
           tileColors: player1Colors,
         };
+
+        const offset = Math.round((squareXCount - squareYCount) / 2)
 
         /** @type {Board} */
         let board = [];
@@ -302,7 +307,7 @@
           board[i] = [];
           for (let j = 0; j < squareYCount; j++) {
             const colors =
-              i < squareXCount / 2 ? player1.tileColors : player2.tileColors;
+              (i + j - offset) < squareYCount ? player1.tileColors : player2.tileColors;
             board[i][j] = randomArrayItem(colors);
           }
         }
