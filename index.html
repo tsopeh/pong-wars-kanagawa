@@ -37,6 +37,20 @@
         padding: 0 5vw;
       }
 
+      .background {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background-image: url("./background.jpg");
+        background-position: center;
+        background-repeat: no-repeat;
+        background-size: cover;
+        opacity: 0.2;
+        z-index: -1;
+      }
+
       h1 {
         font-family: "Honk", serif, sans-serif, monospace;
         font-size: 12vmin;
@@ -53,6 +67,9 @@
         font-family: "Ubuntu Mono", monospace;
         font-size: 2vmin;
         font-weight: 700;
+        background-color: rgba(240, 248, 255, 0.8);
+        padding: 8px;
+        border-radius: 8px;
       }
 
       a {
@@ -62,20 +79,25 @@
   </head>
 
   <body>
+    <div class="background"></div>
     <h1>Kanagawa</h1>
     <canvas id="canvas" width="800" height="600"></canvas>
     <footer>
-      <div>Made by Tsopeh — GitHub | Twitter</div>
+      <div>Made by Tsopeh — <a target="_blank" href="https://github.com/tsopeh/pong-wars-kanagawa">GitHub</a> | <a target="_blank" href="https://twitter.com/phonetic_cope">Twitter</a></div>
       <br />
       <div>
-        <a href="https://twitter.com/vnglst/status/1751278052154179770"
+        <a target="_blank" href="https://twitter.com/vnglst/status/1751278052154179770"
           >Inspiration</a
         >
         |
-        <a href="https://en.wikipedia.org/wiki/The_Great_Wave_off_Kanagawa"
+        <a target="_blank" href="https://en.wikipedia.org/wiki/The_Great_Wave_off_Kanagawa"
           >Theme</a
         >
-        | <a href="https://www.color-hex.com/color-palette/39047">Palette</a>
+        |
+        <a target="_blank" href="https://www.freepik.com/free-vector/vintage-wave-japanese-vector-border-remix-artwork-by-katsushika-hokusai_17433694.htm"
+          >Background</a
+        >
+        | <a target="_blank" href="https://www.color-hex.com/color-palette/39047">Palette</a>
       </div>
     </footer>
     <script>
@@ -196,8 +218,8 @@
       function updateBoardAndPlayer(board, player) {
         /** @type {Array<number>} */
         for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 4) {
-          const checkX = player.x + (Math.cos(angle) * squareSize / 2);
-          const checkY = player.y + (Math.sin(angle) * squareSize / 2);
+          const checkX = player.x + (Math.cos(angle) * squareSize) / 2;
+          const checkY = player.y + (Math.sin(angle) * squareSize) / 2;
 
           const i = Math.floor(checkX / squareSize);
           const j = Math.floor(checkY / squareSize);
@@ -276,13 +298,13 @@
         const player2Colors = ["#19869c", "#3d5066"];
 
         function getRandomInitialDirection() {
-          return (Math.random() > 0.5 ? 1 : -1) * getRandomVelocity(squareSize)
+          return (Math.random() > 0.5 ? 1 : -1) * getRandomVelocity(squareSize);
         }
 
         /** @type {Player} */
         const player1 = {
           x: canvas.width * (1 / 4),
-          y: canvas.height / 2,
+          y: canvas.height * (1 / 4),
           dx: getRandomInitialDirection(),
           dy: getRandomInitialDirection(),
           color: randomArrayItem(player1Colors),
@@ -292,14 +314,14 @@
         /** @type {Player} */
         const player2 = {
           x: canvas.width * (3 / 4),
-          y: canvas.height / 2,
+          y: canvas.height * (3 / 4),
           dx: getRandomInitialDirection(),
           dy: getRandomInitialDirection(),
           color: randomArrayItem(player2Colors),
           tileColors: player1Colors,
         };
 
-        const offset = Math.round((squareXCount - squareYCount) / 2)
+        const offset = Math.round((squareXCount - squareYCount) / 2);
 
         /** @type {Board} */
         let board = [];
@@ -307,7 +329,9 @@
           board[i] = [];
           for (let j = 0; j < squareYCount; j++) {
             const colors =
-              (i + j - offset) < squareYCount ? player1.tileColors : player2.tileColors;
+              i + j - offset < squareYCount
+                ? player1.tileColors
+                : player2.tileColors;
             board[i][j] = randomArrayItem(colors);
           }
         }
