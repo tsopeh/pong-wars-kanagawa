@@ -81,10 +81,6 @@
     <script>
       // @ts-check
 
-      // TODO: Finish the game and after that implement color changing.
-      // Maybe different strategy for wave and the land;
-      // Use different starting angle, to resemble the original piece.
-
       /**
        * @typedef {{
        *  x: number
@@ -116,21 +112,20 @@
       const squareSize = 40;
       const squareXCount = canvas.width / squareSize;
       const squareYCount = canvas.height / squareSize;
-      const initialPlayerSpeed = 8;
 
       const state = getInitialState();
 
       /** @type {FrameRequestCallback} */
       function draw(t) {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        drawBoard(state.board);
-        drawPlayer(state.player1);
-        drawPlayer(state.player2);
-
         const delayBeforeStartMs = 200;
         if (t > delayBeforeStartMs) {
           recalculateState(state);
         }
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        drawBoard(state.board);
+        drawPlayer(state.player1);
+        drawPlayer(state.player2);
 
         requestAnimationFrame(draw);
       }
@@ -169,7 +164,7 @@
       /** @param player {Player} */
       function drawPlayer(player) {
         ctx.beginPath();
-        ctx.arc(player.x, player.y, squareSize, 0, 2 * Math.PI, false);
+        ctx.arc(player.x, player.y, squareSize / 2, 0, 2 * Math.PI, false);
         ctx.fillStyle = player.color;
         ctx.fill();
         ctx.closePath();
@@ -181,11 +176,8 @@
       function recalculateState(state) {
         const { player1, player2, board } = state;
 
-        const p1HitAngles = updateBoardForPlayer(board, player1);
-        const p2HitAngles = updateBoardForPlayer(board, player2);
-
-        updatePlayerDirectionAndVelocity(player1, p1HitAngles);
-        updatePlayerDirectionAndVelocity(player2, p2HitAngles);
+        updateBoardAndPlayer(board, player1);
+        updateBoardAndPlayer(board, player2);
 
         updatePlayerPosition(player1);
         updatePlayerPosition(player2);
@@ -200,14 +192,12 @@
       /**
        * @param board {Board}
        * @param player {Player}
-       * @returns {Array<number>}
        */
-      function updateBoardForPlayer(board, player) {
+      function updateBoardAndPlayer(board, player) {
         /** @type {Array<number>} */
-        const hitAngles = [];
         for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 4) {
-          const checkX = player.x + Math.cos(angle) * squareSize / 2;
-          const checkY = player.y + Math.sin(angle) * squareSize / 2;
+          const checkX = player.x + (Math.cos(angle) * squareSize / 2);
+          const checkY = player.y + (Math.sin(angle) * squareSize / 2);
 
           const i = Math.floor(checkX / squareSize);
           const j = Math.floor(checkY / squareSize);
@@ -218,54 +208,71 @@
             const isHit = !player.tileColors.includes(board[i][j]);
             if (isHit) {
               board[i][j] = randomArrayItem(player.tileColors);
-              hitAngles.push(angle);
+              updatePlayerOnTileHit(player, angle);
             } else {
               // noop
             }
           } else {
-            hitAngles.push(angle);
+            updatePlayerOnBoundaryHit(player);
           }
         }
-        return hitAngles;
       }
 
       /**
        * @param player {Player}
-       * @param hitAngles {Array<number>}
+       * @param hitAngle {number}
        */
-      function updatePlayerDirectionAndVelocity(player, hitAngles) {
-        if (hitAngles.length === 0) {
-          return;
+      function updatePlayerOnTileHit(player, hitAngle) {
+        const curDirX = Math.sign(player.dx);
+        const curDirY = Math.sign(player.dy);
+        let nextDirX = 1;
+        let nextDirY = 1;
+        const isXBased =
+          Math.abs(Math.cos(hitAngle)) >= Math.abs(Math.sin(hitAngle));
+        if (isXBased) {
+          const hitDirX = Math.sign(Math.cos(hitAngle));
+          if (hitDirX === curDirX) {
+            nextDirX = -1;
+          }
+        } else {
+          const hitDirY = Math.sign(Math.sin(hitAngle));
+          if (hitDirY === curDirY) {
+            nextDirY = -1;
+          }
         }
-        const { xDir, yDir } = hitAngles.reduce(
-          (acc, hitAngle) => {
-            const shouldConsiderX =
-              Math.abs(Math.cos(hitAngle)) >= Math.abs(Math.sin(hitAngle));
-            if (shouldConsiderX) {
-              const hitDirX = Math.sign(Math.cos(hitAngle));
-              const travelDirX = Math.sign(player.dx);
-              if (hitDirX === travelDirX) {
-                acc.xDir = -1;
-              }
-            } else {
-              const hitDirY = Math.sign(Math.sin(hitAngle));
-              const travelDirY = Math.sign(player.dy);
-              if (hitDirY === travelDirY) {
-                acc.yDir = -1;
-              }
-            }
-            return acc;
-          },
-          { xDir: 1, yDir: 1 }
-        );
-        const newVelocityX = Math.floor(random(8, 10));
-        const newVelocityY = Math.floor(random(8, 10));
-        player.dx = xDir * Math.sign(player.dx) * newVelocityX;
-        player.dy = yDir * Math.sign(player.dy) * newVelocityY;
+        const newVelocityX = getRandomVelocity(squareSize);
+        const newVelocityY = newVelocityX;
+        player.dx = nextDirX * curDirX * newVelocityX;
+        player.dy = nextDirY * curDirY * newVelocityY;
+      }
+
+      /** @param player {Player} */
+      function updatePlayerOnBoundaryHit(player) {
+        if (
+          player.x + player.dx > canvas.width - squareSize / 2 ||
+          player.x + player.dx < squareSize / 2
+        ) {
+          player.dx = -player.dx;
+        }
+        if (
+          player.y + player.dy > canvas.height - squareSize / 2 ||
+          player.y + player.dy < squareSize / 2
+        ) {
+          player.dy = -player.dy;
+        }
+      }
+
+      /**
+       * @param tileSize {number}
+       * @returns {number}
+       */
+      function getRandomVelocity(tileSize) {
+        return random(tileSize / 5, tileSize / 3);
       }
 
       /** @returns {State} */
       function getInitialState() {
+        const initialPlayerSpeed = squareSize / 3;
         const player1Colors = ["#edd5ad", "#f0e0bb", "#f2e8d0"];
         const player2Colors = ["#19869c", "#3d5066"];
 
