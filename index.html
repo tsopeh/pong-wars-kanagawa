@@ -83,21 +83,40 @@
     <h1>Kanagawa</h1>
     <canvas id="canvas" width="800" height="600"></canvas>
     <footer>
-      <div>Made by Tsopeh — <a target="_blank" href="https://github.com/tsopeh/pong-wars-kanagawa">GitHub</a> | <a target="_blank" href="https://twitter.com/phonetic_cope">Twitter</a></div>
+      <div>
+        Made by Tsopeh —
+        <a target="_blank" href="https://github.com/tsopeh/pong-wars-kanagawa">
+          GitHub
+        </a>
+        |
+        <a target="_blank" href="https://twitter.com/phonetic_cope">Twitter</a>
+      </div>
       <br />
       <div>
-        <a target="_blank" href="https://twitter.com/vnglst/status/1751278052154179770"
-          >Inspiration</a
+        <a
+          target="_blank"
+          href="https://twitter.com/vnglst/status/1751278052154179770"
         >
+          Inspiration
+        </a>
         |
-        <a target="_blank" href="https://en.wikipedia.org/wiki/The_Great_Wave_off_Kanagawa"
-          >Theme</a
+        <a
+          target="_blank"
+          href="https://en.wikipedia.org/wiki/The_Great_Wave_off_Kanagawa"
         >
+          Theme
+        </a>
         |
-        <a target="_blank" href="https://www.freepik.com/free-vector/vintage-wave-japanese-vector-border-remix-artwork-by-katsushika-hokusai_17433694.htm"
-          >Background</a
+        <a
+          target="_blank"
+          href="https://www.freepik.com/free-vector/vintage-wave-japanese-vector-border-remix-artwork-by-katsushika-hokusai_17433694.htm"
         >
-        | <a target="_blank" href="https://www.color-hex.com/color-palette/39047">Palette</a>
+          Background
+        </a>
+        |
+        <a target="_blank" href="https://www.color-hex.com/color-palette/39047">
+          Palette
+        </a>
       </div>
     </footer>
     <script>
@@ -154,17 +173,33 @@
 
       requestAnimationFrame(draw);
 
-      /** @param min {number}
-       *  @param max {number}
-       *  @returns {number}
+      /**
+       * @overload
+       * @param max {number}
+       * @returns {number}
        */
-      function random(min, max) {
+      /**
+       * @overload
+       * @param min {number}
+       * @param max {number}
+       * @returns {number}
+       */
+      /**
+       * @param min {number}
+       * @param [max] {number}
+       * @returns {number}
+       */
+      function randomFloat(min, max) {
+        if (max == null) {
+          max = min;
+          min = 0;
+        }
         return Math.random() * (max - min) + min;
       }
 
       /** @template T @param arr {Array<T>}, @returns {T} */
       function randomArrayItem(arr) {
-        const randomIndex = Math.round(random(0, arr.length - 1));
+        const randomIndex = Math.round(randomFloat(arr.length - 1));
         return arr[randomIndex];
       }
 
@@ -289,7 +324,7 @@
        * @returns {number}
        */
       function getRandomVelocity(tileSize) {
-        return random(tileSize / 4, tileSize / 2);
+        return randomFloat(tileSize / 4, tileSize / 2);
       }
 
       /** @returns {State} */
@@ -298,7 +333,9 @@
         const player2Colors = ["#19869c", "#3d5066"];
 
         function getRandomInitialDirection() {
-          return (Math.random() > 0.5 ? 1 : -1) * getRandomVelocity(squareSize);
+          return (
+            (randomFloat(1) > 0.5 ? 1 : -1) * getRandomVelocity(squareSize)
+          );
         }
 
         /** @type {Player} */
