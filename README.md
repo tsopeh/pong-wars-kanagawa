@@ -124,3 +124,5 @@ python3 -m http.server
 ## Happy hacking! 🎉
 
 Feel free to share this with your hacker friends and colleagues. 🙌 🥳
+
+[Hacker news discussion](https://news.ycombinator.com/item?id=39954382) 🗣
